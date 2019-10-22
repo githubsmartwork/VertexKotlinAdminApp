@@ -1,0 +1,56 @@
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    username: _json_key
+    password: ((gcp.concourse_sa))
+    repository: eu.gcr.io/d3-build-3ca206b4/mvn_node_kubectl
+    tag: latest
+
+inputs:
+  - name: git
+  - name: version
+
+outputs:
+  - name: package
+  - name: qualitycheck-input
+  - name: test-reports
+
+caches:
+  - path: maven
+
+run:
+  path: bash
+  args:
+    - -exc
+    - |
+      export ROOT_FOLDER=$(pwd)
+      ln -s "${ROOT_FOLDER}/maven" "${HOME}/.m2"
+      mkdir -p qualitycheck-input/admin
+      mkdir -p qualitycheck-input/common
+      cd git/admin/src/test/
+      npm install
+      node server.js &
+      cd ../../
+      cat ../../version/version
+
+
+      mvn versions:set -DnewVersion=$(cat ../../version/version) -f pom-admin.xml
+      mvn verify -Djacoco.skip.check=true
+
+      cp ./Dockerfile ../../package
+      cp ./target/*.jar ../../package
+
+
+      cp ./pom.xml ../../qualitycheck-input/admin
+      cp ./pom-admin.xml ../../qualitycheck-input/admin
+      cp -r ./src ../../qualitycheck-input/admin
+      cp -r ./target ../../qualitycheck-input/admin
+
+      cp ../common/pom.xml ../../qualitycheck-input/common
+      cp -r ../common/src ../../qualitycheck-input/common
+      cp -r ../common/target ../../qualitycheck-input/common
+
+      #cp -r ./target/failsafe-reports/*.xml ../../test-reports
+      #cp hiptest-publisher.conf ../../test-reports

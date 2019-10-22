@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+spec:
+  type: NodePort
+  ports:
+    - name: admin
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+    - name: admin-ssl
+      port: 443
+      targetPort: 8443
+      protocol: TCP
+  selector:
+    app: admin

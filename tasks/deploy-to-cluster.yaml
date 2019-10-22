@@ -1,0 +1,37 @@
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    username: _json_key
+    password: ((gcp.concourse_sa))
+    repository: eu.gcr.io/d3-build-3ca206b4/gcloud_kubectl
+    tag: latest
+
+inputs:
+  - name: git
+  - name: terraformEnv
+  - name: version
+
+params:
+  GOOGLE_AUTH: ((gcp.concourse_sa))
+  AUTH0_DEV_CLIENT_SECRET: ((kong.dev_client_secret))
+  AUTH0_QA_CLIENT_SECRET: ((kong.qa_client_secret))
+  AUTH0_PROD_CLIENT_SECRET: ((kong.prod_client_secret))
+
+run:
+  path: /bin/ash
+  args:
+    - -exc
+    - |
+      export GOOGLE_PROJECT_ID=$(cat ./terraformEnv/metadata | jq -r '.project_id')
+      export GOOGLE_REGION=$(cat ./terraformEnv/metadata | jq -r '.gke_cluster_region')
+      export GOOGLE_CLUSTER=$(cat ./terraformEnv/metadata | jq -r '.gke_cluster_name')
+      export REDIS_HOST=$(cat ./terraformEnv/metadata | jq -r '.redis_host')
+      export VERSION=$(cat ./version/version)
+      git/terraform/scripts/connect-to-cluster.sh
+      cd git/admin/manifests/base
+      kustomize edit add configmap version --from-literal=version=$VERSION
+      kustomize edit set image eu.gcr.io/d3-shared-1e49212e/d3-admin=eu.gcr.io/d3-shared-1e49212e/d3-admin:$VERSION
+      envsubst < ../overlays/((env))/kong-plugin-patch.yaml > ../overlays/((env))/kong-plugin-patch-final.yaml
+      kustomize build ../overlays/((env)) | kubectl apply -f -

@@ -1,0 +1,11 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: openid-connect-admin
+config:
+  issuer: https://coats-test.eu.auth0.com/.well-known/openid-configuration
+  client_id: [Wp432I0Y5TmGweYtn4qoFNPeOEZw6RlN]
+  client_secret: [$AUTH0_DEV_CLIENT_SECRET]
+  session_redis_host: $REDIS_HOST
+  redirect_uri: [https://dev.coatsd3.com/admin]
+  audience: [https://dev.coatsd3.com]

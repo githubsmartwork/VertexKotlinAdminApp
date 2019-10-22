@@ -1,0 +1,215 @@
+resource_types:
+  - name: sonar-runner
+    type: docker-image
+    source:
+      repository: cathive/concourse-sonarqube-resource
+      tag: 0.9.1
+
+  - name: terraform
+    type: docker-image
+    source:
+      repository: ljfranklin/terraform-resource
+      tag: 0.12.9
+
+  - name: teams-notification
+    type: docker-image
+    source:
+      repository: nexeck/concourse-teams-resource
+      tag: latest
+
+resources:
+  - name: git
+    type: git
+    source:
+      uri: git@github.com:Coats/d3.git
+      branch: review
+      paths: [ admin,common]
+      private_key: ((github.concourse_github))
+
+
+
+  - name: artifact
+    type: registry-image
+    source:
+      username: _json_key
+      password: ((gcp.concourse_sa))
+      repository: eu.gcr.io/d3-shared-1e49212e/d3-admin
+
+  - name: version
+    type: semver
+    source:
+      driver: gcs
+      bucket: d3-semver
+      key: d3-admin
+      json_key: ((gcp.concourse_sa))
+      file: version
+      initial_version: 1.0.0
+
+  - name: sonarqube
+    type: sonar-runner
+    source:
+      host_url: https://sonarcloud.io/
+      organization: coatsd2
+      login: ((sonarcloud.token))
+
+  - name: devTF
+    type: terraform
+    source:
+      env:
+        GOOGLE_CREDENTIALS: "((gcp.concourse_sa))"
+      backend_type: gcs
+      backend_config:
+        env_name: dev
+        bucket: d3-build-tf
+        prefix: env
+        credentials: ((gcp.concourse_sa))
+      vars:
+        postgres_user_password: ((gcp.cloudsql_pw))
+
+  - name: qaTF
+    type: terraform
+    source:
+      env:
+        GOOGLE_CREDENTIALS: "((gcp.concourse_sa))"
+      backend_type: gcs
+      backend_config:
+        env_name: qa
+        bucket: d3-build-tf
+        prefix: env
+        credentials: ((gcp.concourse_sa))
+      vars:
+        postgres_user_password: ((gcp.cloudsql_pw))
+
+  - name: prodTF
+    type: terraform
+    source:
+      env:
+        GOOGLE_CREDENTIALS: "((gcp.concourse_sa))"
+      backend_type: gcs
+      backend_config:
+        env_name: prod
+        bucket: d3-build-tf
+        prefix: env
+        credentials: ((gcp.concourse_sa))
+      vars:
+        postgres_user_password: ((gcp.cloudsql_pw))
+
+  - name: alert
+    type: teams-notification
+    source:
+      url: ((teams.webhook))
+
+jobs:
+  - name: build_test_push_artifacts
+    on_failure:
+      do:
+        - put: alert
+          params:
+            status: failure
+    serial: true
+    public: false
+    plan:
+      - put: version
+        params: {bump: minor}
+      - get: git
+        trigger: true
+      - task: build mvn package
+        file: git/admin/tasks/maven-build.yaml
+      - task: create_image
+        privileged: true
+        file: git/admin/tasks/create-image.yaml
+      - in_parallel:
+          - put: artifact
+            params:
+              image: image/image.tar
+              additional_tags: version/version
+          - put: sonarqube
+            params:
+              project_path: qualitycheck-input/admin
+              project_key: d3-admin
+              project_name: d3-admin
+              additional_properties:
+                sonar.scm.disabled: true
+                sonar.coverage.jacoco.xmlReportPaths: target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml
+
+  # The qualitygate task breaks the build if the analysis result from SonarQube
+  # indicates that any of our quality metrics have not been met.
+  - name: qualitygate
+    on_failure:
+      do:
+        - put: alert
+          params:
+            status: failure
+    plan:
+      - in_parallel:
+          - get: git
+            passed: [build_test_push_artifacts]
+          - get: artifact
+            passed: [build_test_push_artifacts]
+          - get: sonarqube
+            passed: [build_test_push_artifacts]
+            trigger: true
+          - get: version
+            passed: [build_test_push_artifacts]
+      - task: check-sonarqube-quality-gate
+        file: git/admin/tasks/sonarqube.yaml
+
+  - name: deploy_dev
+    on_failure:
+      do:
+        - put: alert
+          params:
+            status: failure
+    plan:
+      - in_parallel:
+          - get: git
+            passed: [qualitygate]
+            trigger: true
+          - get: terraformEnv
+            resource: devTF
+          - get: version
+            passed: [qualitygate]
+      - task: deploy
+        file: git/admin/tasks/deploy-to-cluster.yaml
+        vars:
+          env: dev
+
+  - name: deploy_qa
+    on_failure:
+      do:
+        - put: alert
+          params:
+            status: failure
+    plan:
+      - in_parallel:
+          - get: git
+            passed: [deploy_dev]
+            trigger: true
+          - get: terraformEnv
+            resource: qaTF
+          - get: version
+            passed: [deploy_dev]
+      - task: deploy
+        file: git/admin/tasks/deploy-to-cluster.yaml
+        vars:
+          env: qa
+
+  - name: deploy_prod
+    on_failure:
+      do:
+        - put: alert
+          params:
+            status: failure
+    plan:
+      - in_parallel:
+          - get: git
+            passed: [deploy_qa]
+            trigger: true
+          - get: terraformEnv
+            resource: prodTF
+          - get: version
+            passed: [deploy_qa]
+      - task: deploy
+        file: git/admin/tasks/deploy-to-cluster.yaml
+        vars:
+          env: prod

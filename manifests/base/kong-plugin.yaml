@@ -1,0 +1,10 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: openid-connect-admin
+config:
+  scopes: [openid, profile, email]
+  session_storage: redis
+  verify_parameters: false
+  upstream_user_info_header: X-USERINFO
+plugin: openid-connect

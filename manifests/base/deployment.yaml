@@ -1,0 +1,34 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: admin
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        name: admin
+        app: admin
+    spec:
+      containers:
+        - name: admin
+          image: eu.gcr.io/d3-shared-1e49212e/d3-admin
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: credentials
+              mountPath: "/credentials"
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: env-config
+          ports:
+            - name: admin
+              containerPort: 8080
+              protocol: TCP
+            - name: admin-ssl
+              containerPort: 8443
+              protocol: TCP
+      volumes:
+        - name: credentials
+          secret:
+            secretName: app-serviceaccount

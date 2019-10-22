@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="async" class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender">
+        <appender class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <fieldNames>
+                    <level>severity</level>
+                </fieldNames>
+            </encoder>
+        </appender>
+    </appender>
+    <logger name="com.coats.d3" level="debug"/>
+    <root level="info">
+        <appender-ref ref="async"/>
+    </root>
+</configuration>

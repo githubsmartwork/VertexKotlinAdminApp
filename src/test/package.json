@@ -1,0 +1,7 @@
+{
+  "name": "grpc-mock-server",
+  "version": "1.0.0",
+  "dependencies": {
+    "grpc-mock": "^0.7.0"
+  }
+}

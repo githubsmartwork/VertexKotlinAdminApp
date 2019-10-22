@@ -1,0 +1,8 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - deployment.yaml
+  - kong-ingress.yaml
+  - kong-plugin.yaml
+  - service.yaml

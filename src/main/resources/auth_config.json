@@ -1,0 +1,6 @@
+{
+  "domain": "dev-d3-satz.auth0.com",
+  "clientId": "maoG92RVdjv1cUOvY5odOge733CtpBt6",
+  "clientSecret": "MwQkxqhkNgOjLSI5LQQzlKL4q5PAiM9LteH7yCbNubpbZpDS9gb3V5c3rJXOuy0f",
+  "audience": "https://dev-d3-satz.auth0.com/api/v2/"
+}

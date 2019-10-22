@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth0-config
+data:
+  AUTH0_AUDIENCE: https://qa.coatsd3.com
+  AUTH0_ISSUER: https://coats-qa.eu.auth0.com/
+  AUTH0_CERT_PEM: |
+    -----BEGIN CERTIFICATE-----
+    MIIDBTCCAe2gAwIBAgIJXDTWhstr9dZOMA0GCSqGSIb3DQEBCwUAMCAxHjAcBgNV
+    BAMTFWNvYXRzLXFhLmV1LmF1dGgwLmNvbTAeFw0xNzEyMTQwNzI5MTZaFw0zMTA4
+    MjMwNzI5MTZaMCAxHjAcBgNVBAMTFWNvYXRzLXFhLmV1LmF1dGgwLmNvbTCCASIw
+    DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMeYsddv0DfZ1aNECWz4h3QpeNQj
+    tva1mltjHaB+DKJ4jnwJMbsdZNq30qzxojPfPtgl9xBLmNoe+9fEj7L3XYi+m+Wr
+    2qOCh/uUyj3iWqjBshhTfAkeZtP3hqpYRdVwLw3KqlTmxZUmgpG8TUBgGkOnAQp6
+    hgdVeoHlNZlROrowAtwctqzzJzMGjKwJ5rpBCEBl3CyifMrLMRXnUCrUq7wzByWT
+    3mtx9EoURV0OKOJEdeQuT6KtkhXE66hYDBZDFFVcU7Gwz4Ltr6Z32zsVR1ja0cPB
+    tO2XNjB/Qyo/j41nZAGmEeC74H3eg9BdO/oGSlc2DtI/VZtxTQTyzbrZflsCAwEA
+    AaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUX8xw/TjiTjGKC4LwF3gO
+    5yjjc1QwDgYDVR0PAQH/BAQDAgKEMA0GCSqGSIb3DQEBCwUAA4IBAQBNSVlMBH3i
+    e3/pZWLp8sJ6jf0bddAyf0UkjN3MaFiKwKu6a/AH5WUm4D2JcN4ZW+wvQbDYehFo
+    +1PfgG1lBy0eRdwHu5omZ4RoVzKqhuhiswZSR2doSFEQh+Z+/2YccUJrBPqou8V8
+    qaIYL0evFm0YPvNg9qaVO39BOIWe4lepipAT4oByhmstsmOomhAYg6zNTaRSjUwP
+    0L1Ty/rKQBg/ikeAmxl6pzujAbdOTuGrOTpZfXi45wsHLxTC1eTfew9mjQ13bIaw
+    N8GbOsLPIagLHvuaDm6s9i62LtodKmIoAghK/YiZU+RdofzTZ0oD/ZvEZuqLpe4s
+    h6tw76hSBb9L
+    -----END CERTIFICATE-----

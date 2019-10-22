@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: admin-ingress
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+    plugins.konghq.com: openid-connect-admin
+spec:
+  rules:
+    - host: d3Host
+      http:
+        paths:
+          - path: "/admin"
+            backend:
+              serviceName: admin
+              servicePort: admin

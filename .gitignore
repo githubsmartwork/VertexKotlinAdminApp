@@ -1,0 +1,7 @@
+/.kotlintest/*
+node_modules/
+.next
+.env
+secrets.yaml
+package-lock.json
+/target/

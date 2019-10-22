@@ -1,0 +1,19 @@
+bases:
+  - ../../base
+
+namespace: d3qa
+
+resources:
+  - auth0-configmap.yaml
+  - grpc-configmap.yaml
+
+patchesStrategicMerge:
+  - kong-plugin-patch-final.yaml
+
+patchesJson6902:
+  - target:
+      group: extensions
+      version: v1beta1
+      kind: Ingress
+      name: admin-ingress
+    path: kong-ingress-patch.yaml
